@@ -180,8 +180,10 @@ class _smash_:
         finally:
             # worker finish
             step(_smash_.N_STEPS-1,None) # don't print any message
-
             import smashbox.utilities
+            test_state.worker_finish(smashbox.utilities.reported_errors,smashbox.utilities.operations)
+            test_state.publish_json()
+
             if smashbox.utilities.reported_errors:
                logger.error('%s error(s) reported',len(smashbox.utilities.reported_errors))
                import sys
@@ -318,6 +320,8 @@ except OSError,x:
       raise
 
 logger = getLogger()
+import smashbox.reporter
+test_state = smashbox.reporter.Test_State()
 
 import logging
 smashbox.script.config_log(logging.DEBUG)

@@ -1,9 +1,16 @@
+import datetime
+import smashbox.utilities
+import platform
+
 class Reporter:
     """ Report execution state of smashbox.
     """
 
     def __init__(self):
-        self.DEMO=False
+        self.DEMO=True
+        self.reported_errors= []
+        self.reported_success = []
+        self.operations = []
 
     def smashbox_start(self,args,config):
         """
@@ -43,13 +50,14 @@ class Reporter:
 
         """
 
+
         if self.DEMO:
             print "TESTCASE_START",name,loop_i,testset_i,namespace.__doc__
 
-            barename=name.replace("test_","")
+            self.barename=name.replace("test_","")
 
             for c in self.config.__dict__:
-                if c.startswith(barename+"_"):
+                if c.startswith(self.barename+"_"):
                     print c,self.config[c]
 
 
@@ -57,3 +65,32 @@ class Reporter:
         if self.DEMO:
             print "TESTCASE_STOP",returncode
 
+
+
+class Test_State:
+
+    def __init__(self):
+        self.reported_errors= []
+        self.reported_success = []
+        self.operations = []
+
+    def worker_finish(self,errors,operations):
+        self.reported_errors.append(errors)
+        self.operations.append(operations)
+
+
+    def publish_json(self):
+
+        print "+ test_name: "
+        print "+ timestamp: " + datetime.datetime.now().strftime("%y%m%d-%H%M%S")
+        print "+ oc_client version: " +  str(smashbox.utilities.ocsync_version())
+        print "+ eos_version: beryl_aquamarine"
+        print "+ platform: " +  platform.system() + platform.release()
+        print "+ operations: " + str(self.operations)
+
+        print "-----------------------------------------------------------------"
+
+        print "     + filesize: "
+        print "     + nfiles: "
+        print "     + success: " + str(len(smashbox.utilities.reported_success))
+        print "     + errors: " + str(len(self.reported_errors))

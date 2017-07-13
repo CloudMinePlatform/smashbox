@@ -128,6 +128,7 @@ def make_workdir(name=None):
     d = os.path.join(config.rundir,name)
     mkdir(d)
     logger.info('make_workdir %s',d)
+    operations.append("CREATE_DIR")
     return d
 
 
@@ -296,7 +297,7 @@ def ocsync_version():
     cmd = config.oc_sync_cmd.split()[0] + " --version"
     rc,stdout,stderr = runcmd(cmd, ignore_exitcode=True,log_warning=False) # do not warn about non-zero exit code (which is unfortunately normal)
 
-    sver = stdout.strip().split()[-1] # the version is the last word on the first line
+    sver = stdout.strip().split()[2] # sometimes appears also at the end the build version
     
     return tuple([int(x) for x in sver.split(".")])
 
@@ -328,6 +329,8 @@ def run_ocsync(local_folder, remote_folder="", n=None, user_num=None):
         logger.info('sync cmd is: %s',cmd)
         logger.info('sync finished: %s',datetime.datetime.now()-t0)
         ocsync_cnt[current_step]+=1
+
+    operations.append("SYNC")
 
 def _prop_check(path,user_num=None,depth="0"):
     """ Private function to implement other utilities.
@@ -398,7 +401,8 @@ def webdav_mkcol_NEW(path, silent=False, user_num=None):
 ###############
 
 # #### SHELL COMMANDS AND TIME FUNCTIONS
-
+import logging
+logger = logging.getLogger()
 def runcmd(cmd,ignore_exitcode=False,echo=True,allow_stderr=True,shell=True,log_warning=True):
     logger.info('running %s', repr(cmd))
     process = subprocess.Popen(cmd, shell=shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -429,7 +433,7 @@ def sleep(n):
 
 
 ######## BASIC FILE AND DIRECTORY OPERATIONS
-
+operations = []
 import shutil
 
 def mkdir(d):
@@ -582,29 +586,35 @@ def implies(p,q):
 # ###### ERROR REPORTING ############
 
 reported_errors = []
+reported_success = []
 
 def error_check(expr,message=""):
     """ Assert expr is True. If not, then mark the test as failed but carry on the execution.
     """
-
-    if not expr: 
-        import inspect
-        f=inspect.getouterframes(inspect.currentframe())[1]
+    import inspect
+    f = inspect.getouterframes(inspect.currentframe())[1]
+    if not expr:
         message=" ".join([message, "%s failed in %s() [\"%s\" at line %s]" %(''.join(f[4]).strip(),f[3],f[1],f[2])])
         logger.error(message)
         reported_errors.append(message)
+    else:
+        message = " ".join([message, "%s success in %s() [\"%s\" at line %s]" % (''.join(f[4]).strip(), f[3], f[1], f[2])])
+        reported_success.append(message)
 
 def fatal_check(expr,message=""):
     """ Assert expr is True. If not, then mark the test as failed and stop immediately.
     """
+    import inspect
+    f = inspect.getouterframes(inspect.currentframe())[1]
+
     if not expr:
-        import inspect
-        f=inspect.getouterframes(inspect.currentframe())[1]
         message=" ".join([message, "%s failed in %s() [\"%s\" at line %s]" %(''.join(f[4]).strip(),f[3],f[1],f[2])])
         logger.fatal(message)
         reported_errors.append(message)
         raise AssertionError(message)
-
+    else:
+        message = " ".join([message, "%s success in %s() [\"%s\" at line %s]" % (''.join(f[4]).strip(), f[3], f[1], f[2])])
+        reported_success.append(message)
 
 # ###### Server Log File Scraping ############
 

@@ -128,7 +128,7 @@ def worker1(step):
 
     error_check(k1 - k0 == nfiles, 'Expecting to have %d files more: see k1=%d k0=%d' % (abs(k1 - nfiles), k1, k0))
 
-    fatal_check(ncorrupt == 0, 'Corrupted files (%d) found' % ncorrupt)  # Massimo 12-APR
+    fatal_check(ncorrupt == 0, 'Corrupted files (%d) found' % ncorrupt)
 
 
 

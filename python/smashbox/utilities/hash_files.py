@@ -77,6 +77,7 @@ def create_hashfile(wdir,filemask=None,size=None,bs=None,slow_write=None):
     Return name of the create file.
 
     """
+    operations.append("CREATE_FILE")
     return create_hashfile2(wdir,filemask,size,bs,slow_write)[0]
 
 def create_hashfile2(wdir,filemask=None,size=None,bs=None,slow_write=None):
