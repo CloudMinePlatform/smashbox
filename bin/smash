@@ -175,7 +175,7 @@ def main():
        global global_exitcode_error
        import subprocess, pickle
        t0=datetime.datetime.now()
-       cmd = [sys.executable,os.path.join(os.path.dirname(os.path.dirname(__file__)),'python/smashbox/multiprocessing_engine.py'), t, pickle.dumps(config)]
+       cmd = [sys.executable,os.path.join(os.path.dirname(os.path.dirname(__file__)),'python/smashbox/multiprocessing_engine.py'), t,pickle.dumps(config)]
        p = subprocess.Popen(cmd)
        p.communicate()
        t1=datetime.datetime.now()
@@ -251,7 +251,7 @@ def main():
             log_quiet('running %s in %s as %s testset #%s %s',t,config.rundir,config.oc_account_name,i,repr(ts)) # log_quiet
 
          reporter.testcase_start(barename(t),j,i,smashbox.no_engine)
-
+         config.__dict__['loop']=j # add subtest id for monitoring
          if not args.dry_run:
             run_multiprocessing_engine(config,os.path.abspath(t),reporter)
 
@@ -270,6 +270,7 @@ def main():
       j = 1
       while j <= args.loop or args.loop == 0:
          log_quiet ("Running iteration %d" % j)
+
 
          if not smashbox.no_engine.testsets:
             run_test(t,j,None)

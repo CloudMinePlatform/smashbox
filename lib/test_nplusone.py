@@ -101,8 +101,10 @@ def worker0(step):
     logger.info('SUCCESS: %d files found', k1)
 
     step(4, "Final report")
-
     time1 = time.time()
+
+    compute_qos_metrics(time0,time1,total_size,k1,k0)
+
     tuples = ([])
     tuples.append(("cernbox.cboxsls.nplusone." + ostype + ".nfiles", (time1, nfiles)))
     tuples.append(("cernbox.cboxsls.nplusone." + ostype + ".total_size", (time1, total_size)))

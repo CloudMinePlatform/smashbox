@@ -1,18 +1,11 @@
-import datetime
-import smashbox.utilities
-import platform
-
 class Reporter:
     """ Report execution state of smashbox.
     """
 
     def __init__(self):
-        self.DEMO=True
-        self.reported_errors= []
-        self.reported_success = []
-        self.operations = []
+        self.DEMO = False
 
-    def smashbox_start(self,args,config):
+    def smashbox_start(self, args, config):
         """
         Smashbox is starting.
         Arguments:
@@ -21,8 +14,8 @@ class Reporter:
         """
 
         if self.DEMO:
-            print "SMASHBOX_START",args,config
-            self.config=config
+            print "SMASHBOX_START", args, config
+            self.config = config
 
     def smashbox_stop(self):
         """
@@ -32,8 +25,7 @@ class Reporter:
         if self.DEMO:
             print "SMASHBOX_STOP"
 
-    
-    def testcase_start(self,name,loop_i,testset_i,namespace):
+    def testcase_start(self, name, loop_i, testset_i, namespace):
         """
         Testcase is about to start.
         Arguments:
@@ -41,56 +33,24 @@ class Reporter:
          - loop_i: loop index or None if not running in the loop
          - testset_i: testset index or None if running with default configuration
          - namespace: access to the testcase module namespace
-
          Example: 
           try:
            print "Current testset configuration", namespace.testsets[testset_i]
           expect AttributeError:
            print "Testsets not defined"
-
         """
 
-
         if self.DEMO:
-            print "TESTCASE_START",name,loop_i,testset_i,namespace.__doc__
+            print "TESTCASE_START", name, loop_i, testset_i, namespace.__doc__
 
-            self.barename=name.replace("test_","")
+            barename = name.replace("test_", "")
 
             for c in self.config.__dict__:
-                if c.startswith(self.barename+"_"):
-                    print c,self.config[c]
+                if c.startswith(barename + "_"):
+                    print c, self.config[c]
 
-
-    def testcase_stop(self,returncode):
+    def testcase_stop(self, returncode):
         if self.DEMO:
-            print "TESTCASE_STOP",returncode
+            print "TESTCASE_STOP", returncode
 
 
-
-class Test_State:
-
-    def __init__(self):
-        self.reported_errors= []
-        self.reported_success = []
-        self.operations = []
-
-    def worker_finish(self,errors,operations):
-        self.reported_errors.append(errors)
-        self.operations.append(operations)
-
-
-    def publish_json(self):
-
-        print "+ test_name: "
-        print "+ timestamp: " + datetime.datetime.now().strftime("%y%m%d-%H%M%S")
-        print "+ oc_client version: " +  str(smashbox.utilities.ocsync_version())
-        print "+ eos_version: beryl_aquamarine"
-        print "+ platform: " +  platform.system() + platform.release()
-        print "+ operations: " + str(self.operations)
-
-        print "-----------------------------------------------------------------"
-
-        print "     + filesize: "
-        print "     + nfiles: "
-        print "     + success: " + str(len(smashbox.utilities.reported_success))
-        print "     + errors: " + str(len(self.reported_errors))

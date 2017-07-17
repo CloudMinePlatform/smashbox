@@ -577,16 +577,23 @@ def get_md5_versions_on_server(fn):
 
     return result
 
+# ###### GLOBAL VARIABLES FOR REPORTING REPORTING ############
+reported_errors = []
+reported_success = []
+qos_metrics = []
+
+def compute_qos_metrics(time0,time1,total_size,k1,k0):
+    transfer_rate = total_size / (time1 - time0)
+    synced_files = (time1, k1 - k0)
+    qos_metrics.append([transfer_rate,synced_files])
 
 # ###### LOGIC OPERANDS  ############
 
 def implies(p,q):
     return not p or q
 
-# ###### ERROR REPORTING ############
 
-reported_errors = []
-reported_success = []
+# ###### ERROR REPORTING ############
 
 def error_check(expr,message=""):
     """ Assert expr is True. If not, then mark the test as failed but carry on the execution.

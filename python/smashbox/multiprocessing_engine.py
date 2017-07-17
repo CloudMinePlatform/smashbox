@@ -98,11 +98,11 @@ class _smash_:
     steps = []
     supervisor_step = Value('i', 0)
 
+
     DEBUG = False
 
     # this is a hardcoded maximum number of steps
     N_STEPS = 100
-    
     workers = []
 
 
@@ -157,6 +157,15 @@ class _smash_:
             sep='*'*80
             logger.info( 'entering new step \n'+sep+'\n'+'(%d) %s:  %s\n'%(i,_smash_.process_name,message.upper())+sep)
 
+    @staticmethod
+    def save_worker_results(errors, success, operations,qos_metrics):
+        """
+        Update the subtest state with the partial results of each worker
+        """
+        _smash_.worker_results.put(errors)
+        _smash_.worker_results.put(success)
+        _smash_.worker_results.put(operations)
+        _smash_.worker_results.put(qos_metrics)
 
     @staticmethod
     def worker_wrap(wi,f,fname):
@@ -167,11 +176,9 @@ class _smash_:
         def step(i,message=""):
             _smash_._step(i,wi,message)
 
-
         try:
             try:
                 f(step)
-
             except Exception,x:
                 import traceback
                 logger.fatal("Exception occured: %s \n %s", x,traceback.format_exc())
@@ -180,9 +187,8 @@ class _smash_:
         finally:
             # worker finish
             step(_smash_.N_STEPS-1,None) # don't print any message
-            import smashbox.utilities
-            test_state.worker_finish(smashbox.utilities.reported_errors,smashbox.utilities.operations)
-            test_state.publish_json()
+
+            _smash_.save_worker_results(smashbox.utilities.reported_errors,smashbox.utilities.reported_success,smashbox.utilities.operations,smashbox.utilities.qos_metrics)
 
             if smashbox.utilities.reported_errors:
                logger.error('%s error(s) reported',len(smashbox.utilities.reported_errors))
@@ -194,7 +200,7 @@ class _smash_:
     def run():
         """ Lunch worker processes and the supervisor loop. Block until all is finished.
         """
-        from multiprocessing import Process, Manager
+        from multiprocessing import Process, Manager, Queue
 
         import smashbox.utilities
         smashbox.utilities.setup_test()        
@@ -210,23 +216,30 @@ class _smash_:
         _smash_.supervisor_step = manager.Value('i', 0)
         _smash_.steps = manager.list([0 for x in range(len(_smash_.workers))])
 
+        import smashbox.utilities.monitoring
+        _smash_.monitor = smashbox.utilities.monitoring.StateMonitor()
+        _smash_.monitor.initialize(_smash_.args, config)
+
         # first worker => process number == 0
         for i,f_n in enumerate(_smash_.workers, ):
             f = f_n[0]
             fname = f_n[1]
             if platform.system() == "Windows":
-                p = Process(target=wrapper,args=(i,f,fname, _smash_.shared_object,_smash_.steps,_smash_.supervisor_step))
+                p = Process(target=wrapper,args=(i,f,fname, _smash_.shared_object,_smash_.steps,_smash_.supervisor_step,_smash_.monitor.worker_results))
             else:
                 p = Process(target=_smash_.worker_wrap,args=(i, f, fname))
             p.start()
             _smash_.all_procs.append(p)
 
+
         _smash_.supervisor(_smash_.steps)
 
         for p in _smash_.all_procs:
             p.join()
+            _smash_.monitor.join_worker_results()
 
         smashbox.utilities.finalize_test()
+        _smash_.monitor.testcase_stop()
 
         for p in _smash_.all_procs:
            if p.exitcode != 0:
@@ -242,7 +255,7 @@ def add_worker(f,name=None):
     return f
 
 
-def wrapper(i,funct,fname, shared_object, steps,supervisor_step):
+def wrapper(i,funct,fname, shared_object, steps,supervisor_step, worker_results):
     """ Wrapper of worker_wrap() static method.
     Static methods cannot be used directly as the target
     argument on Windows. Since windows lacks of os.fork(), it is needed
@@ -251,8 +264,8 @@ def wrapper(i,funct,fname, shared_object, steps,supervisor_step):
     _smash_.shared_object = shared_object
     globals().update(_smash_.shared_object)
     _smash_.steps=steps
-    _smash_.supervisor_step=supervisor_step
-
+    _smash_.supervisor_step = supervisor_step
+    _smash_.worker_results = worker_results
     _smash_.worker_wrap(i,funct,fname)
 
 
@@ -320,8 +333,7 @@ except OSError,x:
       raise
 
 logger = getLogger()
-import smashbox.reporter
-test_state = smashbox.reporter.Test_State()
+
 
 import logging
 smashbox.script.config_log(logging.DEBUG)
