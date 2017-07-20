@@ -158,16 +158,6 @@ class _smash_:
             logger.info( 'entering new step \n'+sep+'\n'+'(%d) %s:  %s\n'%(i,_smash_.process_name,message.upper())+sep)
 
     @staticmethod
-    def save_worker_results(errors, success, operations,qos_metrics):
-        """
-        Update the subtest state with the partial results of each worker
-        """
-        _smash_.worker_results.put(errors)
-        _smash_.worker_results.put(success)
-        _smash_.worker_results.put(operations)
-        _smash_.worker_results.put(qos_metrics)
-
-    @staticmethod
     def worker_wrap(wi,f,fname):
         if fname is None:
             fname = f.__name__
@@ -188,7 +178,7 @@ class _smash_:
             # worker finish
             step(_smash_.N_STEPS-1,None) # don't print any message
 
-            _smash_.save_worker_results(smashbox.utilities.reported_errors,smashbox.utilities.reported_success,smashbox.utilities.operations,smashbox.utilities.qos_metrics)
+            _smash_.worker_results.put([smashbox.utilities.reported_errors,smashbox.utilities.reported_success,smashbox.utilities.operations,smashbox.utilities.qos_metrics])
 
             if smashbox.utilities.reported_errors:
                logger.error('%s error(s) reported',len(smashbox.utilities.reported_errors))
@@ -217,7 +207,7 @@ class _smash_:
         _smash_.steps = manager.list([0 for x in range(len(_smash_.workers))])
 
         import smashbox.utilities.monitoring
-        _smash_.monitor = smashbox.utilities.monitoring.StateMonitor()
+        _smash_.monitor = smashbox.utilities.monitoring.StateMonitor(manager)
         _smash_.monitor.initialize(_smash_.args, config)
 
         # first worker => process number == 0
@@ -238,8 +228,9 @@ class _smash_:
             p.join()
             _smash_.monitor.join_worker_results()
 
+
         smashbox.utilities.finalize_test()
-        _smash_.monitor.testcase_stop()
+        _smash_.monitor.subtestcase_finish()
 
         for p in _smash_.all_procs:
            if p.exitcode != 0:

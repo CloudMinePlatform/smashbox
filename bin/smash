@@ -251,7 +251,6 @@ def main():
             log_quiet('running %s in %s as %s testset #%s %s',t,config.rundir,config.oc_account_name,i,repr(ts)) # log_quiet
 
          reporter.testcase_start(barename(t),j,i,smashbox.no_engine)
-         config.__dict__['loop']=j # add subtest id for monitoring
          if not args.dry_run:
             run_multiprocessing_engine(config,os.path.abspath(t),reporter)
 
@@ -267,16 +266,24 @@ def main():
          logger.critical("Wrong testset specification: %d index out of range for %s",args.testset,barename(t))
          sys.exit(1)
 
+      config.__dict__['subtest_id'] = 0  # add subtest id for monitoring
+
+      if not args.all_testsets:
+         config.__dict__['nsubtests'] = 0
+      else:
+         config.__dict__['nsubtests'] = len(smashbox.no_engine.testsets)
+
       j = 1
       while j <= args.loop or args.loop == 0:
+         config.runid = datetime.datetime.now().strftime("%y%m%d-%H%M%S")
          log_quiet ("Running iteration %d" % j)
-
 
          if not smashbox.no_engine.testsets:
             run_test(t,j,None)
          else:
             if args.all_testsets:
                for i in range(len(smashbox.no_engine.testsets)):
+                  config.__dict__['subtest_id'] = i  # add subtest id for monitoring
                   run_test(t,j,i)
             else:
                i = args.testset # this may be None if no testset indicated
