@@ -102,7 +102,7 @@ Examples:
     bin/smash -o nplusone_nfiles=10 lib/test_nplusone.py
     
     # run all tests - print summaries only
-    bin/smash --quiet lib/test_*.py
+    bin/smash --quiet lib/
 
 You will find main log files in ~/smashdir/log* and all temporary files and detailed logs for each test-case in ~/smashdir/<test-case>
 
