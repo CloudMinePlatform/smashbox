@@ -209,6 +209,9 @@ def main():
    reporter = smashbox.reporter.Reporter()
    reporter.smashbox_start(args,config)
 
+   config.runid = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+
    for t in tests:
 
       workdir = None
@@ -275,7 +278,7 @@ def main():
 
       j = 1
       while j <= args.loop or args.loop == 0:
-         config.runid = datetime.datetime.now().strftime("%y%m%d-%H%M%S")
+
          log_quiet ("Running iteration %d" % j)
 
          if not smashbox.no_engine.testsets:
