@@ -39,7 +39,7 @@ class StateMonitor:
                 self.parameters.append(param)
                 print c, config[c]
 
-        self.test_results = {'subtest_id':self.subtest_id,'parameters':[],'errors': [], 'success': [], 'operations':[], 'qos_metrics': [], 'total_errors':0,'total_success':0}
+        self.test_results = {'subtest_id':self.subtest_id,'parameters':[],'parameters_text':"",'errors': [],'errors_text': "",'success': [], 'operations':[], 'qos_metrics': [], 'total_errors':0,'total_success':0}
 
 
     def join_worker_results(self):
@@ -52,13 +52,16 @@ class StateMonitor:
         self.test_results['operations'].append(partial_results[2])
 
         if(len(partial_results[3])!=0): # normally only one worker has the qos_metrics
-            self.test_results['qos_metrics'].append(partial_results[3][0])
+            self.test_results['qos_metrics'].append(partial_results[3])
 
         self.test_results['total_errors']+=len(self.test_results['errors'])
         self.test_results['total_success']+=len(self.test_results['success'])
 
         if (len( self.parameters) > self.subtest_id and len(self.test_results['parameters'])==0): # add subtests parameters
             self.test_results['parameters'].append(self.parameters[self.subtest_id])
+            self.test_results['parameters_text'] = str(self.parameters[self.subtest_id])
+
+
 
     def subtestcase_finish(self):
         """
@@ -138,6 +141,7 @@ class StateMonitor:
         """
         Saved results in a dictionary to be able to convert them in a json format
         """
+        if (self.test_results['errors']): self.test_results['errors_text'] = str(self.test_results['errors'])
         json_result = {'test_name': self.testname, 'timestamp': self.runid.replace(" ","T")+"Z", 'hostname': socket.gethostname(),
                                   'oc_client version': str(str(ocsync_version())[1:-1].replace(",",".")), 'eos_version': "beryl_aquamarine",
                                   'platform': platform.system() + platform.release(), 'subtests': [self.test_results]}
