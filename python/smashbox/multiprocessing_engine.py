@@ -97,7 +97,7 @@ class _smash_:
     process_number = 0
     steps = []
     supervisor_step = Value('i', 0)
-
+    monitor = None
 
     DEBUG = False
 
