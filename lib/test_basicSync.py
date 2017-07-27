@@ -17,8 +17,8 @@ Note on effects of removing local state db (1.6):
 
 """
 
-from smashbox.utilities import * 
-
+from smashbox.utilities import *
+from smashbox.utilities.hash_files import md5sum
 import glob
 
 filesizeKB = int(config.get('basicSync_filesizeKB',10000))
