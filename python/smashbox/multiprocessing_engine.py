@@ -97,15 +97,12 @@ class _smash_:
     process_number = 0
     steps = []
     supervisor_step = Value('i', 0)
-    monitor = None
 
     DEBUG = False
 
     # this is a hardcoded maximum number of steps
     N_STEPS = 100
     workers = []
-
-
                 
     all_procs = []
 
@@ -209,6 +206,7 @@ class _smash_:
         import smashbox.utilities.monitoring
         _smash_.monitor = smashbox.utilities.monitoring.StateMonitor(manager)
         _smash_.monitor.initialize(_smash_.args, config)
+        _smash_.worker_results = _smash_.monitor.worker_results
 
         # first worker => process number == 0
         for i,f_n in enumerate(_smash_.workers, ):
