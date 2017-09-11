@@ -299,7 +299,7 @@ def ocsync_version():
 
     sver = stdout.strip().split()[2] # sometimes appears also at the end the build version
     
-    return tuple([int(x) for x in sver.split(".")])
+    return tuple([x for x in sver.split(".")])
 
 # this is a local variable for each worker that keeps track of the repeat count for the current step
 ocsync_cnt = {}

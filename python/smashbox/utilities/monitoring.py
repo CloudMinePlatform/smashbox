@@ -5,6 +5,8 @@ import socket
 import sys
 import json
 import urllib2
+import requests
+import json
 
 #--keep-going -a --loop=40 --quiet C:\Users\ydelahoz\workspace\smashbox\lib\
 class HeadRequest(urllib2.Request):
@@ -14,6 +16,8 @@ class HeadRequest(urllib2.Request):
 class StateMonitor:
     # Test information  -->  {'test_name': string, 'timestamp': string, 'hostname': string, 'oc_client version': string, 'eos_version': string, 'platform': string, 'passed': int, 'failed': int, 'subtests': [self.test_results]}
     # Subtests information --> {'subtest_id':subtest_id , 'parameters': params, 'errors': [], 'success': [], 'operations':[], 'qos_metrics': [], 'total_errors':0, 'total_success':0}
+    # Test information  -->  {'test_name': string, 'timestamp': string, 'hostname': string, 'oc_client version': string, 'eos_version': string, 'platform': string, 'passed': int, 'failed': int, 'subtests': [self.test_results]}
+
 
     def __init__(self,manager):
         self.testname = None
@@ -31,6 +35,7 @@ class StateMonitor:
         self.nsubtests =  config.__dict__["nsubtests"]
         self.smashdir = config.smashdir
 
+        # extract test parameters
         self.parameters = []
         param = {}
         for c in config.__dict__:
@@ -84,7 +89,7 @@ class StateMonitor:
 
     def save_json(self,data):
         """
-        Save json results in a file to preserve the state between main program calls 
+        Save json results in a file
         """
         data = json.dumps(data)
         time = str(self.runid).split(" ")
@@ -127,24 +132,25 @@ class StateMonitor:
         Compute total passed subtests and publish results
         """
         # compute passed subtests
-        failed = 0
-        for subtest in json_results['subtests']:
-            if(subtest['total_errors']>=1): # A subtest is considered failed with one or more errors
-                failed += 1
+        #failed = 0
+        #for subtest in json_results['data']['subtests']:
+        #    if(subtest['total_errors']>=1): # A subtest is considered failed with one or more errors
+        #        failed += 1
 
-        json_results['failed']= failed
-        json_results['passed']=len(json_results['subtests']) - failed
+        #json_results['failed']= failed
+        #json_results['passed']=len(json_results['subtests']) - failed
 
-        print self.publish_results(json.dumps(json_results))
+        #print self.publish_results(json.dumps(json_results))
+        self.send_and_check(json_results)
 
     def get_json_results(self):
         """
         Saved results in a dictionary to be able to convert them in a json format
         """
         if (self.test_results['errors']): self.test_results['errors_text'] = str(self.test_results['errors'])
-        json_result = {'test_name': self.testname, 'timestamp': self.runid.replace(" ","T")+"Z", 'hostname': socket.gethostname(),
-                                  'oc_client version': str(str(ocsync_version())[1:-1].replace(",",".")), 'eos_version': "beryl_aquamarine",
-                                  'platform': platform.system() + platform.release(), 'subtests': [self.test_results]}
+        json_result = [{'producer':"cernbox", 'type':"ops", 'hostname': socket.gethostname(), 'timestamp':time.time(), "data":{"activity": "smashbox-regression", 'test_name': self.testname, 'datetime': self.runid.replace(" ","T")+"Z", 'hostname': socket.gethostname(),
+                                  'oc_client_version': str(str(ocsync_version())[1:-1].replace(",",".")), 'eos_version': "beryl_aquamarine",'platform': platform.system() + platform.release(),'subtest_id': self.test_results['subtest_id'],'passed': 1,'total_errors': 0,'parameters_text': self.test_results['parameters_text']}}]
+
         return json_result
 
 
@@ -166,6 +172,24 @@ class StateMonitor:
             response = "Error:  {}".format(str(e))
         return response
 
+    def send(self,document):
+        return requests.post('http://monit-metrics:10012/', data=json.dumps(document),
+                             headers={"Content-Type": "application/json; charset=UTF-8"})
+
+    def send_and_check(self,document, should_fail=False):
+        #document = [{"timestamp": 1503922109.633996, "hostname": "yolandadep", "type": "ops", "producer": "cernbox", "data": {"parameters_text": "", "datetime": "2017-08-28T14:08:09Z", "eos_version": "beryl_aquamarine", "oc_client_version": "'2'. '2'. '4'", "test_name": "basicSync", "total_errors": 0, "qos_metrics": [], "parameters": [], "hostname": "yolandadep", "platform": "Linux3.10.0-514.26.2.el7.x86_64", "subtest_id": 0, "passed": 1, "activity": "smashbox-regression"}}]
+        document = [
+            {"timestamp": int(round(time.time()* 1000)), "hostname": "yolandadep", "type": "ops", "producer": "cernbox",
+             "data": {"parameters_text": "", "datetime": "2017-08-28T14:08:09Z", "eos_version": "beryl_aquamarine",
+                      "oc_client_version": "'2'. '2'. '4'", "test_name": "basicSync", "total_errors": 0,
+                      "qos_metrics": [], "parameters": [], "hostname": "yolandadep",
+                      "platform": "Linux3.10.0-514.26.2.el7.x86_64", "subtest_id": 0, "passed": 1,
+                      "activity": "smashbox-regression"}}
+        ]
+        response = self.send(document)
+        assert (
+        (response.status_code in [200]) != should_fail), 'With document: {0}. Status code: {1}. Message: {2}'.format(
+            document, response.status_code, response.text)
 
 
 

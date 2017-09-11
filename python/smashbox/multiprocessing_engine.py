@@ -212,10 +212,7 @@ class _smash_:
         for i,f_n in enumerate(_smash_.workers, ):
             f = f_n[0]
             fname = f_n[1]
-            if platform.system() == "Windows":
-                p = Process(target=wrapper,args=(i,f,fname, _smash_.shared_object,_smash_.steps,_smash_.supervisor_step,_smash_.monitor.worker_results))
-            else:
-                p = Process(target=_smash_.worker_wrap,args=(i, f, fname))
+            p = Process(target=wrapper,args=(i,f,fname, _smash_.shared_object,_smash_.steps,_smash_.supervisor_step,_smash_.monitor.worker_results))
             p.start()
             _smash_.all_procs.append(p)
 
