@@ -9,15 +9,8 @@ import requests
 import json
 
 #--keep-going -a --loop=40 --quiet C:\Users\ydelahoz\workspace\smashbox\lib\
-class HeadRequest(urllib2.Request):
-      def get_method(self):
-        return "HEAD"
-
 class StateMonitor:
     # Test information  -->  {'test_name': string, 'timestamp': string, 'hostname': string, 'oc_client version': string, 'eos_version': string, 'platform': string, 'passed': int, 'failed': int, 'subtests': [self.test_results]}
-    # Subtests information --> {'subtest_id':subtest_id , 'parameters': params, 'errors': [], 'success': [], 'operations':[], 'qos_metrics': [], 'total_errors':0, 'total_success':0}
-    # Test information  -->  {'test_name': string, 'timestamp': string, 'hostname': string, 'oc_client version': string, 'eos_version': string, 'platform': string, 'passed': int, 'failed': int, 'subtests': [self.test_results]}
-
 
     def __init__(self,manager):
         self.testname = None
@@ -27,7 +20,7 @@ class StateMonitor:
 
     def initialize(self,args, config):
         """
-        Initialize the subtest state with initial information
+        Initialize the test state with initial information
         """
         self.testname = (str(args.test_target).split("test_"))[-1].split(".")[0]
         self.subtest_id = config.__dict__["subtest_id"]
@@ -62,85 +55,23 @@ class StateMonitor:
         self.test_results['total_errors']+=len(self.test_results['errors'])
         self.test_results['total_success']+=len(self.test_results['success'])
 
-        if (len( self.parameters) > self.subtest_id and len(self.test_results['parameters'])==0): # add subtests parameters
+        if (len( self.parameters) > self.subtest_id and len(self.test_results['parameters'])==0): # add tests parameters
             self.test_results['parameters'].append(self.parameters[self.subtest_id])
             self.test_results['parameters_text'] = str(self.parameters[self.subtest_id])
 
 
-
-    def subtestcase_finish(self):
-        """
-        Update the dictionary with the last results and publish at the end
-        """
-        json_results = self.get_json_results()
-
-        if(self.subtest_id==0): # first iteration
-            if (self.subtest_id>=self.nsubtests-1): # no subtests
-                self.test_finish(json_results)
-            self.save_json(json_results)
-        else:
-            data = self.get_json()
-            data['subtests'].append(self.test_results)
-
-            if(self.subtest_id>=self.nsubtests-1):
-                self.test_finish(data)
-            else:
-                self.save_json(data)
-
-    def save_json(self,data):
-        """
-        Save json results in a file
-        """
-        data = json.dumps(data)
-        time = str(self.runid).split(" ")
-        dir = self.smashdir + "/" + "json_results" + "/" + str(self.testname) + "/" + time[0]
-
-        if not os.path.exists(dir):
-            os.makedirs(dir)
-
-        filename = dir + "/" +  time[1].replace(":","-") + ".txt"
-
-        try:
-            fd = open(filename, 'w')
-            fd.write(data)
-            fd.close()
-        except:
-            print 'ERROR writing json results', filename
-            pass
-
-    def get_json(self):
-        """
-        Restore json results previously saved in the file 
-        """
-        time = str(self.runid).split(" ")
-        dir = self.smashdir + "/" + "json_results" + "/" + str(self.testname) + "/" + time[0]
-
-        filename = dir + "/" +  time[1].replace(":","-") + ".txt"
-
-        returndata = {}
-        try:
-            fd = open(filename, 'r')
-            text = fd.read()
-            fd.close()
-            returndata = json.loads(text)
-        except:
-            print 'ERROR loading json results:', filename
-        return returndata
-
-    def test_finish(self,json_results):
-        """
+    def test_finish(self):
+        """"
         Compute total passed subtests and publish results
         """
-        # compute passed subtests
-        #failed = 0
-        #for subtest in json_results['data']['subtests']:
-        #    if(subtest['total_errors']>=1): # A subtest is considered failed with one or more errors
-        #        failed += 1
+        if(self.test_results['total_errors']>=1): # A subtest is considered failed with one or more errors
+           self.failed = 1
+           self.passed = 0
+        else:
+            self.failed =0
+            self.passed =1
 
-        #json_results['failed']= failed
-        #json_results['passed']=len(json_results['subtests']) - failed
-
-        #print self.publish_results(json.dumps(json_results))
+        json_results = self.get_json_results()
         self.send_and_check(json_results)
 
     def get_json_results(self):
@@ -148,44 +79,17 @@ class StateMonitor:
         Saved results in a dictionary to be able to convert them in a json format
         """
         if (self.test_results['errors']): self.test_results['errors_text'] = str(self.test_results['errors'])
-        json_result = [{'producer':"cernbox", 'type':"ops", 'hostname': socket.gethostname(), 'timestamp':time.time(), "data":{"activity": "smashbox-regression", 'test_name': self.testname, 'datetime': self.runid.replace(" ","T")+"Z", 'hostname': socket.gethostname(),
-                                  'oc_client_version': str(str(ocsync_version())[1:-1].replace(",",".")), 'eos_version': "beryl_aquamarine",'platform': platform.system() + platform.release(),'subtest_id': self.test_results['subtest_id'],'passed': 1,'total_errors': 0,'parameters_text': self.test_results['parameters_text']}}]
+        json_result = [{'producer':"cernbox", 'type':"ops", 'hostname': socket.gethostname(), 'timestamp':int(round(time.time()* 1000)), "data":{"activity": "smashbox-regression", 'test_name': self.testname, 'datetime': self.runid.replace(" ","T")+"Z", 'hostname': socket.gethostname(),
+                                  'oc_client_version': str(str(ocsync_version())[1:-1].replace(",",".")), 'errors_text':self.test_results['errors'],'qos_metrics':self.test_results['qos_metrics'],'eos_version': "beryl_aquamarine",'platform': platform.system() + platform.release(),'subtest_id': self.test_results['subtest_id'],'passed': self.passed,'failed': self.failed, 'total_errors': self.test_results['total_errors'],'parameters_text': self.test_results['parameters_text']}}]
 
         return json_result
 
-
-    def publish_results(self,data):
-        """
-        Publish results in a kibana dashboard
-        """
-        url_parameters = {'cluster': "http://smashbox-monitoring:9200/smashbox-tests",
-                          'index': self.testname,
-                          'index_period':self.runid.replace(" ","T")+"Z", }
-        url = "%(cluster)s/%(index)s/%(index)s-%(index_period)s" % url_parameters
-        url = url
-        headers = {'content-type': 'application/json'}
-        try:
-            url = urllib2.Request(url, headers=headers, data=data)
-            req = urllib2.urlopen(url)
-            response = req.read()
-        except Exception as e:
-            response = "Error:  {}".format(str(e))
-        return response
 
     def send(self,document):
         return requests.post('http://monit-metrics:10012/', data=json.dumps(document),
                              headers={"Content-Type": "application/json; charset=UTF-8"})
 
     def send_and_check(self,document, should_fail=False):
-        #document = [{"timestamp": 1503922109.633996, "hostname": "yolandadep", "type": "ops", "producer": "cernbox", "data": {"parameters_text": "", "datetime": "2017-08-28T14:08:09Z", "eos_version": "beryl_aquamarine", "oc_client_version": "'2'. '2'. '4'", "test_name": "basicSync", "total_errors": 0, "qos_metrics": [], "parameters": [], "hostname": "yolandadep", "platform": "Linux3.10.0-514.26.2.el7.x86_64", "subtest_id": 0, "passed": 1, "activity": "smashbox-regression"}}]
-        document = [
-            {"timestamp": int(round(time.time()* 1000)), "hostname": "yolandadep", "type": "ops", "producer": "cernbox",
-             "data": {"parameters_text": "", "datetime": "2017-08-28T14:08:09Z", "eos_version": "beryl_aquamarine",
-                      "oc_client_version": "'2'. '2'. '4'", "test_name": "basicSync", "total_errors": 0,
-                      "qos_metrics": [], "parameters": [], "hostname": "yolandadep",
-                      "platform": "Linux3.10.0-514.26.2.el7.x86_64", "subtest_id": 0, "passed": 1,
-                      "activity": "smashbox-regression"}}
-        ]
         response = self.send(document)
         assert (
         (response.status_code in [200]) != should_fail), 'With document: {0}. Status code: {1}. Message: {2}'.format(
@@ -193,6 +97,14 @@ class StateMonitor:
 
 
 
+
+
+
+
+# --------------------------------------------------------------------------------
+# Send metrics to Grafana
+#   Report tests results and statistics to the Grafana monitoring dashboard
+# --------------------------------------------------------------------------------
 
 # simple monitoring to grafana (disabled if not set in config)
 def push_to_monitoring(tuples,timestamp=None):
@@ -203,10 +115,7 @@ def push_to_monitoring(tuples,timestamp=None):
     send_metric(tuples)
 
 
-#--------------------------------------------------------------------------------
-# Send metrics to Grafana
-#   Report tests results and statistics to the Grafana monitoring dashboard
-#--------------------------------------------------------------------------------
+
 def send_metric(tuples):
 
     monitoring_host=config.get('monitoring_host',"filer-carbon.cern.ch")

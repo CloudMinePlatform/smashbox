@@ -225,7 +225,7 @@ class _smash_:
 
 
         smashbox.utilities.finalize_test()
-        _smash_.monitor.subtestcase_finish()
+        _smash_.monitor.test_finish()
 
         for p in _smash_.all_procs:
            if p.exitcode != 0:
