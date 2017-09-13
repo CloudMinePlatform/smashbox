@@ -4,14 +4,14 @@ __doc__ = """ This test moves files from one folder to another.
 
 """
 
-testsets = [ {'dirMove_DIRA':'DIRA', 
-              'dirMove_DIRB':'DIRB' }
+testsets = [ {'fileMove_DIRA':'DIRA',
+              'fileMove_DIRB':'DIRB' }
              ]
 
 import os.path
 
-DIRA = os.path.normpath(config.get('dirMove_DIRA','DIRA'))
-DIRB = os.path.normpath(config.get('dirMove_DIRB','DIRB'))
+DIRA = os.path.normpath(config.get('fileMove_DIRA','DIRA'))
+DIRB = os.path.normpath(config.get('fileMove_DIRB','DIRB'))
 
 nfiles = int(config.get('dirMove_nfiles',10))
 

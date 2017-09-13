@@ -8,36 +8,36 @@ all added files are kept on the server and are found in the final directory.
 
 
 
-nfiles = int(config.get('concurrentMoveDir_nfiles',100))
-filesize = int(config.get('concurrentMoveDir_filesize',10))
-delaySeconds = int(config.get('concurrentMoveDir_delaySeconds',3)) # if delaySeconds > 0 then remover waits; else the adder waits;
+nfiles = int(config.get('concurrentDirMove_nfiles',100))
+filesize = int(config.get('concurrentDirMove_filesize',10))
+delaySeconds = int(config.get('concurrentDirMove_delaySeconds',3)) # if delaySeconds > 0 then remover waits; else the adder waits;
 
 from smashbox.utilities import *
 
 testsets = [ 
-    {'concurrentMoveDir_nfiles':100,
-     'concurrentMoveDir_filesize':10,
-     'concurrentMoveDir_delaySeconds':10 },  # removing the directory while lots of tiny files are uploaded
+    {'concurrentDirMove_nfiles':100,
+     'concurrentDirMove_filesize':10,
+     'concurrentDirMove_delaySeconds':10 },  # removing the directory while lots of tiny files are uploaded
 
-    {'concurrentMoveDir_nfiles':10,
-     'concurrentMoveDir_filesize':OWNCLOUD_CHUNK_SIZE(1.1),
-     'concurrentMoveDir_delaySeconds':5 },  # removing the directory while a large file is chunk-uploaded
+    {'concurrentDirMove_nfiles':10,
+     'concurrentDirMove_filesize':OWNCLOUD_CHUNK_SIZE(1.1),
+     'concurrentDirMove_delaySeconds':5 },  # removing the directory while a large file is chunk-uploaded
 
-    {'concurrentMoveDir_nfiles':2,
-     'concurrentMoveDir_filesize':OWNCLOUD_CHUNK_SIZE(5),
-     'concurrentMoveDir_delaySeconds':5 },  # removing the directory while a large file is chunk-uploaded
+    {'concurrentDirMove_nfiles':2,
+     'concurrentDirMove_filesize':OWNCLOUD_CHUNK_SIZE(5),
+     'concurrentDirMove_delaySeconds':5 },  # removing the directory while a large file is chunk-uploaded
 
-    {'concurrentMoveDir_nfiles':20,
-     'concurrentMoveDir_filesize':OWNCLOUD_CHUNK_SIZE(0.9),
-     'concurrentMoveDir_delaySeconds':10 }, # removing the directory more but smaller files are uploaded
+    {'concurrentDirMove_nfiles':20,
+     'concurrentDirMove_filesize':OWNCLOUD_CHUNK_SIZE(0.9),
+     'concurrentDirMove_delaySeconds':10 }, # removing the directory more but smaller files are uploaded
 
-    {'concurrentMoveDir_nfiles':5,
-     'concurrentMoveDir_filesize':OWNCLOUD_CHUNK_SIZE(0.1),
-     'concurrentMoveDir_delaySeconds':-5 }, # removing the directory before files are uploaded
+    {'concurrentDirMove_nfiles':5,
+     'concurrentDirMove_filesize':OWNCLOUD_CHUNK_SIZE(0.1),
+     'concurrentDirMove_delaySeconds':-5 }, # removing the directory before files are uploaded
 
-    {'concurrentMoveDir_nfiles':5,
-     'concurrentMoveDir_filesize':OWNCLOUD_CHUNK_SIZE(2.1),
-     'concurrentMoveDir_delaySeconds':-10 } # removing the directory before laarge files are chunk-uploaded
+    {'concurrentDirMove_nfiles':5,
+     'concurrentDirMove_filesize':OWNCLOUD_CHUNK_SIZE(2.1),
+     'concurrentDirMove_delaySeconds':-10 } # removing the directory before laarge files are chunk-uploaded
 
     ]
 

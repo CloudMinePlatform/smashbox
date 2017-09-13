@@ -11,22 +11,22 @@ OwnCloud7? : For PUT which creates the missing directories the expected outcome 
 
 """
 
-nfiles = int(config.get('concurrentRemoveDir_nfiles',10))
-filesizeKB = int(config.get('concurrentRemoveDir_filesizeKB',9000))
-delaySeconds = int(config.get('concurrentRemoveDir_delaySeconds',3)) # if delaySeconds > 0 then remover waits; else the adder waits;
+nfiles = int(config.get('concurrentDirRemove_nfiles',10))
+filesizeKB = int(config.get('concurrentDirRemove_filesizeKB',9000))
+delaySeconds = int(config.get('concurrentDirRemove_delaySeconds',3)) # if delaySeconds > 0 then remover waits; else the adder waits;
 
 testsets = [ 
-    {'concurrentRemoveDir_nfiles':3,
-     'concurrentRemoveDir_filesizeKB':10000,
-     'concurrentRemoveDir_delaySeconds':5 },  # removing the directory while a large file is chunk-uploaded
+    {'concurrentDirRemove_nfiles':3,
+     'concurrentDirRemove_filesizeKB':10000,
+     'concurrentDirRemove_delaySeconds':5 },  # removing the directory while a large file is chunk-uploaded
 
-    {'concurrentRemoveDir_nfiles':40,
-     'concurrentRemoveDir_filesizeKB':9000,
-     'concurrentRemoveDir_delaySeconds':5 }, # removing the directory while lots of smaller files are uploaded
+    {'concurrentDirRemove_nfiles':40,
+     'concurrentDirRemove_filesizeKB':9000,
+     'concurrentDirRemove_delaySeconds':5 }, # removing the directory while lots of smaller files are uploaded
 
-    {'concurrentRemoveDir_nfiles':5,
-     'concurrentRemoveDir_filesizeKB':15000,
-     'concurrentRemoveDir_delaySeconds':-5 } # removing the directory before files are uploaded
+    {'concurrentDirRemove_nfiles':5,
+     'concurrentDirRemove_filesizeKB':15000,
+     'concurrentDirRemove_delaySeconds':-5 } # removing the directory before files are uploaded
 
     ]
 
