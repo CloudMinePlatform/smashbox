@@ -3,8 +3,6 @@ import pickle
 import struct
 import socket
 import sys
-import json
-import urllib2
 import requests
 import json
 
@@ -37,7 +35,11 @@ class StateMonitor:
                 self.parameters.append(param)
                 print c, config[c]
 
-        self.test_results = {'subtest_id':self.subtest_id,'parameters':[],'parameters_text':"",'errors': [],'errors_text': "",'success': [], 'operations':[], 'qos_metrics': [], 'total_errors':0,'total_success':0}
+        # initialize json to be sent for monitoring
+        self.test_results = {"activity": "smashbox-regression", 'test_name': self.testname, 'hostname': socket.gethostname(),
+                             'oc_client_version': str(str(ocsync_version())[1:-1].replace(",",".")),'eos_version': "beryl_aquamarine",'platform': platform.system() + platform.release(),
+                             'subtest_id':self.subtest_id,'parameters':self.parameters,'parameters_text':str(self.parameters),'errors': [],'errors_text': "",'success': [],
+                             'total_errors':0,'total_success':0, 'qos_metrics': [],'passed': 0,'failed': 0 }
 
 
     def join_worker_results(self):
@@ -47,7 +49,6 @@ class StateMonitor:
         partial_results = self.worker_results.get()
         if(partial_results[0]): self.test_results['errors'].append(partial_results[0])
         if(partial_results[1]): self.test_results['success'].append(partial_results[1])
-        self.test_results['operations'].append(partial_results[2])
 
         if(len(partial_results[3])!=0): # normally only one worker has the qos_metrics
             self.test_results['qos_metrics'].append(partial_results[3])
@@ -55,18 +56,14 @@ class StateMonitor:
         self.test_results['total_errors']+=len(self.test_results['errors'])
         self.test_results['total_success']+=len(self.test_results['success'])
 
-        if (len( self.parameters) > self.subtest_id and len(self.test_results['parameters'])==0): # add tests parameters
-            self.test_results['parameters'].append(self.parameters[self.subtest_id])
-            self.test_results['parameters_text'] = str(self.parameters[self.subtest_id])
-
 
     def test_finish(self):
         """"
         Compute total passed subtests and publish results
         """
         if(self.test_results['total_errors']>=1): # A subtest is considered failed with one or more errors
-           self.failed = 1
-           self.passed = 0
+            self.test_results['passed'] = 0
+            self.test_results['failed'] = 1
         else:
             self.failed =0
             self.passed =1
@@ -79,9 +76,7 @@ class StateMonitor:
         Saved results in a dictionary to be able to convert them in a json format
         """
         if (self.test_results['errors']): self.test_results['errors_text'] = str(self.test_results['errors'])
-        json_result = [{'producer':"cernbox", 'type':"ops", 'hostname': socket.gethostname(), 'timestamp':int(round(time.time()* 1000)), "data":{"activity": "smashbox-regression", 'test_name': self.testname, 'datetime': self.runid.replace(" ","T")+"Z", 'hostname': socket.gethostname(),
-                                  'oc_client_version': str(str(ocsync_version())[1:-1].replace(",",".")), 'errors_text':self.test_results['errors'],'qos_metrics':self.test_results['qos_metrics'],'eos_version': "beryl_aquamarine",'platform': platform.system() + platform.release(),'subtest_id': self.test_results['subtest_id'],'passed': self.passed,'failed': self.failed, 'total_errors': self.test_results['total_errors'],'parameters_text': self.test_results['parameters_text']}}]
-
+        json_result = [{'producer':"cernbox", 'type':"ops", 'hostname': socket.gethostname(), 'timestamp':int(round(self.runid* 1000)), "data":self.test_results}]
         return json_result
 
 
