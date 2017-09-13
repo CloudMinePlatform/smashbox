@@ -103,7 +103,7 @@ def worker0(step):
     step(4, "Final report")
     time1 = time.time()
 
-    compute_qos_metrics(time0,time1,total_size,k1,k0)
+    compute_qos_metrics(time0,time1,total_size,k1,k0,nfiles)
 
     tuples = ([])
     tuples.append(("cernbox.cboxsls.nplusone." + ostype + ".nfiles", (time1, nfiles)))

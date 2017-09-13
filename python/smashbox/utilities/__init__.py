@@ -582,8 +582,8 @@ reported_errors = []
 reported_success = []
 qos_metrics = []
 
-def compute_qos_metrics(time0,time1,total_size,k1,k0):
-    qos_metrics.append({"transfer_rate" :total_size / (time1 - time0), "synced_files": k1 - k0})
+def compute_qos_metrics(time0,time1,total_size,k1,k0,nfiles):
+    qos_metrics.append({"transfer_rate" :total_size / (time1 - time0), "synced_files": k1 - k0, "nfiles":nfiles})
 
 
 # ###### LOGIC OPERANDS  ############

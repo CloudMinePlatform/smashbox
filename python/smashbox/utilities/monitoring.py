@@ -8,7 +8,6 @@ import json
 
 #--keep-going -a --loop=40 --quiet C:\Users\ydelahoz\workspace\smashbox\lib\
 class StateMonitor:
-    # Test information  -->  {'test_name': string, 'timestamp': string, 'hostname': string, 'oc_client version': string, 'eos_version': string, 'platform': string, 'passed': int, 'failed': int, 'subtests': [self.test_results]}
 
     def __init__(self,manager):
         self.testname = None
@@ -59,14 +58,14 @@ class StateMonitor:
 
     def test_finish(self):
         """"
-        Compute total passed subtests and publish results
+        Check if the test has passed and publish results
         """
         if(self.test_results['total_errors']>=1): # A subtest is considered failed with one or more errors
             self.test_results['passed'] = 0
             self.test_results['failed'] = 1
         else:
-            self.failed =0
-            self.passed =1
+            self.test_results['failed'] = 0
+            self.test_results['passed'] = 1
 
         json_results = self.get_json_results()
         self.send_and_check(json_results)

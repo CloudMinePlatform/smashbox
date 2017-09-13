@@ -30,8 +30,9 @@ import time
 import tempfile
 import glob
 
-from smashbox.utilities import * 
+
 from smashbox.utilities import reflection
+from smashbox.utilities.hash_files import *
 
 @add_worker
 def worker0(step):

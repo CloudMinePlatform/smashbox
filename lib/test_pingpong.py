@@ -1,6 +1,5 @@
-from smashbox.utilities import * 
-from smashbox.utilities.hash_files import count_files
-
+from smashbox.utilities import *
+from smashbox.utilities.hash_files import *
 import glob
 
 __doc__ = """ Test parallel upload of the same file by two clients.
