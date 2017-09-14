@@ -68,7 +68,18 @@ class StateMonitor:
             self.test_results['passed'] = 1
 
         json_results = self.get_json_results()
-        self.send_and_check(json_results)
+
+        if config.__dict__["kmonit"]==True:
+            self.send_and_check(json_results)
+
+        if config.__dict__["gmonit"]==True and self.testname=="nplusone" and len(self.test_results['qos_metrics'][0][0])>0:
+            tuples = ([])
+            qos_metrics = self.test_results['qos_metrics'][0][0]
+            tuples.append(("cernbox.cboxsls.nplusone." + self.test_results['platform'] + ".nfiles", (self.runid, qos_metrics['nfiles'])))
+            tuples.append(("cernbox.cboxsls.nplusone." + self.test_results['platform'] + ".transfer_rate", (self.runid,  qos_metrics['transfer_rate'])))
+            tuples.append(("cernbox.cboxsls.nplusone." + self.test_results['platform'] + ".worker0.synced_files", qos_metrics['synced_files']))
+            self.push_to_monitoring(json_results)
+
 
     def get_json_results(self):
         """
@@ -78,6 +89,10 @@ class StateMonitor:
         json_result = [{'producer':"cernbox", 'type':"ops", 'hostname': socket.gethostname(), 'timestamp':int(round(self.runid* 1000)), "data":self.test_results}]
         return json_result
 
+    # --------------------------------------------------------------------------------
+    # Send metrics to kibana-monit central service
+    #   Report tests results and statistics to the kibana monitoring dashboard
+    # --------------------------------------------------------------------------------
 
     def send(self,document):
         return requests.post('http://monit-metrics:10012/', data=json.dumps(document),
@@ -90,45 +105,43 @@ class StateMonitor:
             document, response.status_code, response.text)
 
 
+    # --------------------------------------------------------------------------------
+    # Send metrics to Grafana
+    #   Report tests results and statistics to the Grafana monitoring dashboard
+    # --------------------------------------------------------------------------------
+
+    # simple monitoring to grafana (disabled if not set in config)
+    def push_to_monitoring(self,tuples,timestamp=None):
+
+        if not timestamp:
+            timestamp = time.time()
+        logger.info("publishing logs to grafana %s" % timestamp)
+        self.send_metric(tuples)
+
+    def send_metric(self,tuples):
+
+        monitoring_host=config.get('monitoring_host',"filer-carbon.cern.ch")
+        monitoring_port=config.get('monitoring_port',2003)
+
+        payload = pickle.dumps(tuples, protocol=2)
+        header = struct.pack('!L', len(payload))
+        message = header + payload
+        logger.info("message %s" % message)
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print 'Socket created'
+
+        # Bind socket to local host and port
+        try:
+            s.connect((monitoring_host, monitoring_port))
+        except socket.error as msg:
+            logger.info('Connect failed. Error Code : ' + str(msg[0]) + ' Message : ' + msg[1])
+            sys.exit()
+
+        s.sendall(message)
+        logger.info("publishing logs to grafana")
+        s.close()
 
 
 
 
 
-# --------------------------------------------------------------------------------
-# Send metrics to Grafana
-#   Report tests results and statistics to the Grafana monitoring dashboard
-# --------------------------------------------------------------------------------
-
-# simple monitoring to grafana (disabled if not set in config)
-def push_to_monitoring(tuples,timestamp=None):
-
-    if not timestamp:
-        timestamp = time.time()
-    logger.info("publishing logs to grafana %s" % timestamp)
-    send_metric(tuples)
-
-
-
-def send_metric(tuples):
-
-    monitoring_host=config.get('monitoring_host',"filer-carbon.cern.ch")
-    monitoring_port=config.get('monitoring_port',2003)
-
-    payload = pickle.dumps(tuples, protocol=2)
-    header = struct.pack('!L', len(payload))
-    message = header + payload
-    logger.info("message %s" % message)
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    print 'Socket created'
-
-    # Bind socket to local host and port
-    try:
-        s.connect((monitoring_host, monitoring_port))
-    except socket.error as msg:
-        logger.info('Connect failed. Error Code : ' + str(msg[0]) + ' Message : ' + msg[1])
-        sys.exit()
-
-    s.sendall(message)
-    logger.info("publishing logs to grafana")
-    s.close()

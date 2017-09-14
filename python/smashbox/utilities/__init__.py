@@ -5,6 +5,7 @@ import datetime
 import subprocess
 import time
 import urllib
+import glob
 from sys import platform
 
 # Utilities to be used in the test-cases.
@@ -461,19 +462,7 @@ def mv(a,b):
     shutil.move(a, b)
 
 def list_files(path,recursive=False):
-    if platform.system() == 'Windows':
-        runcmd('dir /s /b ' + path)
-    else:
-        if platform.system() == 'Darwin':
-            opts = ""
-        else:
-            opts = "--full-time"
-
-        if recursive:
-            runcmd('ls -lR %s %s'%(opts,path))
-        else:
-            runcmd('ls -lh %s %s'%(opts,path))
-
+    glob.glob(path)
 
 #http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python#377028
 def which(program):

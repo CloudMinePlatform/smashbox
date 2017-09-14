@@ -44,6 +44,8 @@ def main():
    parser.add_argument('--all-testsets', '-a', dest="all_testsets", action="store_true", help='run all testsets defined within each test script file')
    parser.add_argument('--testset', '-t', dest="testset", action="store", default=None, type=int, help='run just one testset specified by index, starting from 0')
    parser.add_argument('--loop', '-l', dest="loop", action="store", default=1, type=int, help='number of times a test command should be executed')
+   parser.add_argument('--kibana-monit', '-km', dest="kmonit", action="store", default=False, type=bool, help='enables monitoring with monit-kibana')
+   parser.add_argument('--grafana-monit', '-gm', dest="gmonit", action="store", default=False, type=bool, help='enables monitoring with grafana')
 
    args = parser.parse_args()
 
@@ -59,6 +61,7 @@ def main():
        logger.log(logging.SUMMARY,fmt,*args,**kwds)
    
    level = logging.WARNING # log warnings, errors and quiet messages
+
 
    if args.quiet:
        level = logging.ERROR
@@ -100,6 +103,16 @@ def main():
 
    ############
    # handle specific config options
+
+   if args.kmonit == True:
+      config.__dict__['kmonit'] = True
+   else:
+      config.__dict__['kmonit'] = False
+
+   if args.gmonit == True:
+      config.__dict__['gmonit'] = True
+   else:
+      config.__dict__['gmonit'] = False
 
    if args.keep_state:
       config.oc_account_reset_procedure = 'keep'

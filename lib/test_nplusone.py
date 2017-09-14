@@ -7,7 +7,7 @@ __doc__ = """ Add nfiles to a directory and check consistency.
 
 from smashbox.utilities import *
 from smashbox.utilities.hash_files import *
-from smashbox.utilities.monitoring import push_to_monitoring
+
 import platform
 import logging
 
@@ -105,14 +105,7 @@ def worker0(step):
 
     compute_qos_metrics(time0,time1,total_size,k1,k0,nfiles)
 
-    tuples = ([])
-    tuples.append(("cernbox.cboxsls.nplusone." + ostype + ".nfiles", (time1, nfiles)))
-    tuples.append(("cernbox.cboxsls.nplusone." + ostype + ".total_size", (time1, total_size)))
-    tuples.append(("cernbox.cboxsls.nplusone." + ostype + ".elapsed", (time1, time1 - time0)))
-    tuples.append(("cernbox.cboxsls.nplusone." + ostype + ".transfer_rate", (time1, total_size / (time1 - time0))))
-    tuples.append(("cernbox.cboxsls.nplusone." + ostype + ".worker0.synced_files", (time1, k1 - k0)))
-    print(tuples)
-    push_to_monitoring(tuples)
+
 
 
 @add_worker
