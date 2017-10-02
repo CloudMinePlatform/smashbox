@@ -1,1 +1,2 @@
 -e git+https://github.com/owncloud/pyocclient.git@master#egg=pyocclient
+pycurl==7.19
