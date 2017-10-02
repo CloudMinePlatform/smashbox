@@ -235,7 +235,7 @@ def loser(step):
 
        fatal_check(len(statedb_files)==1,"expected journal file, not found")
 
-        remove_file(statedb_files[0])
+       remove_file(statedb_files[0])
 
     run_ocsync(d,n=3) # conflict file will be synced to the server but it requires more than one sync run
 
