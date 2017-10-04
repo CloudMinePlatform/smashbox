@@ -129,14 +129,17 @@ def main():
       logger.critical("config error: undefined oc_sync_cmd")
       sys.exit(1)
 
-   oc_sync_cmd_exe = config.oc_sync_cmd.split(' ')[0]
-   oc_sync_cmd_args = config.oc_sync_cmd.split(' ')[1:]
+   if isinstance(config.oc_sync_cmd, basestring):
+      config.oc_sync_cmd = config.oc_sync_cmd.split(' ')
 
-   if oc_sync_cmd_exe.startswith('./') or oc_sync_cmd_exe.startswith('/'):
+   oc_sync_cmd_exe = config.oc_sync_cmd[0]
+   oc_sync_cmd_args = config.oc_sync_cmd[1:]
+
+   if oc_sync_cmd_exe.startswith('./') or os.path.isabs(oc_sync_cmd_exe):
       oc_sync_cmd_exe = os.path.normpath(os.path.join(top_smash,oc_sync_cmd_exe))
    else:
 
-      if '/' in oc_sync_cmd_exe:
+      if os.sep in oc_sync_cmd_exe:
          logger.error("config error: %s: relative path to oc_sync_cmd must start with ./", config.oc_sync_cmd)
          sys.exit(1)
 
@@ -154,7 +157,7 @@ def main():
 
    # executable is found, now append the arguments if any
       
-   config.oc_sync_cmd = " ".join([oc_sync_cmd_exe] + oc_sync_cmd_args)
+   #config.oc_sync_cmd = " ".join([oc_sync_cmd_exe] + oc_sync_cmd_args)
 
    import string
 
@@ -186,7 +189,7 @@ def main():
        global global_exitcode_error
        import subprocess, pickle
        t0=datetime.datetime.now()
-       cmd = ['python2',os.path.join(os.path.dirname(os.path.dirname(__file__)),'python/smashbox/multiprocessing_engine.py'), t, pickle.dumps(config)]
+       cmd = [sys.executable,os.path.join(os.path.dirname(os.path.dirname(__file__)),'python/smashbox/multiprocessing_engine.py'), t, pickle.dumps(config)]
        p = subprocess.Popen(cmd)
        p.communicate()
        t1=datetime.datetime.now()
