@@ -48,10 +48,53 @@ General layout:
    
 </pre>
 
-Installation
+Supported OSes
 ============
 
-Note: Currently this framework works on Unix-like systems only. Windows port is needed.
+Requires:
+ * python 2.7+
+ * pycurl
+
+Linux
+-----
+
+This framework should work out-of-the-box on any recent Linux
+which supports python2.
+
+Sync clients will usually be in the PATH.
+
+MacOSX
+-------
+
+Dependency installation via pip (example):
+  * sudo pip install pycurl
+
+You may need to run the smashbox executable by calling python
+interpreter directly like this:
+
+python bin/smash
+
+Location of sync clients:
+
+ * /Applications/cernbox.app/Contents/MacOS/cernboxcmd
+ * /Applications/owncloud.app/Contents/MacOS/owncloudcmd
+ 
+Windows
+--------
+
+Dependency installation via pip (example):
+ * c:/Python27/python.exe -m pip install pycurl
+
+ You may need to call python interpreter directly:
+
+c:/Python27/python.exe bin/smash
+
+Location of sync client may be configured like this:
+
+ * oc_sync_cmd = ['C:\Program Files (x86)\cernbox\cernboxcmd.exe',"--trust"]
+
+Installation
+============
 
 Clone git repository into your local ``smashbox`` directory.
 
@@ -102,7 +145,7 @@ Examples:
     bin/smash -o nplusone_nfiles=10 lib/test_nplusone.py
     
     # run all tests - print summaries only
-    bin/smash --quiet lib/test_*.py
+    bin/smash --quiet lib/
 
 You will find main log files in ~/smashdir/log* and all temporary files and detailed logs for each test-case in ~/smashdir/<test-case>
 
